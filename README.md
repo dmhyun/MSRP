@@ -68,7 +68,7 @@ We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFac
 3. Train MSRP by using the following command line.
 	- <pre> <code>python train.py</code></pre>
 	- The model will be automatically saved.
-	- It will take at least 5 hours on GeForece RTX 3090.
+	- It will take at least 5 hours on GeForce RTX 3090.
     
 4. Evaluate the trained model using ***evaluate.py***.
 	- Change the model path from the model ID to the path of the trained model, ***trained_msrp/lb0.01_ap0.3***.
