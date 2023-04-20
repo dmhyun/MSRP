@@ -44,7 +44,7 @@ The proposed model (**MSRP**) substantially outperforms both abstractive and ext
 * Numpy
 
 ## Evaluation with Trained Models
-We uploaded the trained models in HuggingFace library, and you can easily evaluate the uploaded models.
+We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFace library, and you can easily evaluate the uploaded models.
 
 * anonsubms/msrp_length
 * anonsubms/msrp_ratio
