@@ -28,7 +28,7 @@ Summarization shortens given texts while maintaining core contents of the texts,
 
 We devise an **abstractive** model by formulating the summarization task as a reinforcement learning without ground-truth summaries.
 
-<p align="center"><img src="images/model.png" alt="graph" width="85%"></p>
+<p align="center"><img src="images/model.png" alt="graph" width="99%"></p>
 
 ### Summary Accuracy
 
