@@ -62,3 +62,7 @@ We uploaded the trained models in HuggingFace library, and you can easily evalua
   * <pre><code>python evaulate.py MODEL_ID</code></pre>
 
   * <pre>[Example] <code>python evaulate.py anonsubms/msrp_length</code></pre>
+  
+## Model training
+It will be updated soon.
+
