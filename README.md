@@ -74,7 +74,7 @@ We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFac
 	- Change the model path from the model ID to the path of the trained model, ***trained_msrp/lb0.01_ap0.3***.
     - <pre> <code>python evaulate.py trained_msrp/lb0.01_ap0.3</code></pre>
     
-5. You can also test the pretraining. 
+- You can also perform the pretraining. 
 	- <pre> <code>python pretrain_t5.py</code></pre>
 	- If you want to use your pretrained model, then change ***init_path*** argument in ***train.py*** to the saved directory ***t5-pretrained/***, and run the MSRP.
 
