@@ -44,7 +44,7 @@ The proposed model (**MSRP**) substantially outperforms both abstractive and ext
 * Numpy
 
 ## Evaluation with Trained Models
-We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFace library, and you can easily evaluate the uploaded models.
+We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFace library so that you can easily evaluate the uploaded models. It will automatically download the trained model and evaluate it on the data.
 
 * anonsubms/msrp_length
 * anonsubms/msrp_ratio
@@ -54,10 +54,32 @@ We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFac
 [Example] <pre> <code>python evaulate.py anonsubms/msrp_length</code></pre>
   
 ## Model training
-It will be updated soon.
+1. Download the training data from [a public link](https://drive.google.com/open?id=0B6N7tANPyVeBNmlSX19Ld2xDU1E).
+	- Move ***train.article.txt*** file to ***data/train/***
+    
+2. Modify a file of PyTorch (i.e., ***grad_mode.py***) to flow the gradient while generating summaries.
+	- This process is required as default code does not allow gradient flow through ***generate*** function used to generate summaries.
+	- Highly recommended to make a virtual environment (e.g., Anaconda environment)
+    - The file (***grad_mode.py***) can be found in the library path
+    - <pre> <code>~/local/anaconda3/envs/ENV_NAME/lib/python3.6/site-packages/torch/autograd/grad_mode.py</code></pre>
+	- Modify the code under ***decorate_context*** fnuction by referring ***grad_model_modification.png*** image.
+    <p align="center"><img src="grad_model_modification.png" alt="graph" width="45%"></p>
+    
+3. Train MSRP by using the following command line.
+	- python train.py
+	- The model will be automatically saved.
+	- It will take at least 5 hours on GeForece RTX 3090.
+    
+4. Evaluate the trained model using ***evaluate.py***.
+	- Change the model path from the model ID to the path of the trained model, ***trained_msrp/lb0.01_ap0.3***.
+    - <pre> <code>python evaulate.py trained_msrp/lb0.01_ap0.3</code></pre>
+    
+5. You can also test the pretraining. 
+	- <pre> <code>python pretrain_t5.py</code></pre>
+	- If you want to use your pretrained model, then change ***init_path*** argument in ***train.py*** to the saved directory ***t5-pretrained/***, and run the MSRP.
 
 ## To-do list
-- [ ] Update how to train
+- [x] Update how to train
 - [ ] Upload outputs
 - [ ] Upload evaluation code based on output texts
 
