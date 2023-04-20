@@ -40,6 +40,7 @@ The proposed model (**MSRP**) substantially outperforms both abstractive and ext
 
 * Python
 * Pytorch
+* pythonrouge
 * transformers
 * Numpy
 
