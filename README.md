@@ -81,7 +81,7 @@ We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFac
 
 ## To-do list
 - [x] Update how to train
-- [ ] Upload outputs
+- [x] Upload outputs
 - [ ] Upload evaluation code based on output texts
 
 ## Citation
