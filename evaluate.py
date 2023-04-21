@@ -252,3 +252,8 @@ for tl in tls:
     print('{}\tTL={}'.format(dtype, tl))    
     print('R1\tR2\tRL\tFD\tFL\tAL')
     print('{}\t{}\t{}\t{:.3}\t{:.3}\t{:.3}\n'.format(*(scores+[cp_score, fl_score, lenavg])))  
+
+
+    ofn = '{}_{}_Len{}.txt'.format(fn.split('/')[-1], dtype, tl)
+    with open(ofn, 'w') as wf:
+        for s in summaries: wf.write(s+'\n')
