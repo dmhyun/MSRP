@@ -34,7 +34,7 @@ We devise an **abstractive** model by formulating the summarization task as a re
 
 The proposed model (**MSRP**) substantially outperforms both abstractive and extractive models, yet frequently generating new words not contained in input texts.
 
-<p align="center"><img src="images/accuracy.png" alt="graph" width="65%"></p>
+<p align="center"><img src="images/accuracy.png" alt="graph" width="75%"></p>
 
 ## Major Requirements
 
