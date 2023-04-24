@@ -9,6 +9,8 @@
 <p align="center">
     <a href="https://2022.emnlp.org" alt="Conference">
         <img src="https://img.shields.io/badge/EMNLP'22-Findings-brightgreen" /></a>   
+    <a href="https://sites.google.com/view/sustainlp2022" alt="Workshop">
+        <img src="https://img.shields.io/badge/SustainNLP'22 workshop-blue" /></a>   
     <a href="https://pytorch.org/" alt="PyTorch">
       <img src="https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?e&logo=PyTorch&logoColor=white" /></a>   
 </p>
