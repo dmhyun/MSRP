@@ -52,7 +52,13 @@ We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFac
 * anonsubms/msrp_length_sb
 * anonsubms/msrp_ratio_sb
 
-[Example] <pre> <code>python evaulate.py anonsubms/msrp_length</code></pre>
+[Example with 0-th GPU]
+<pre> <code>python evaulate.py anonsubms/msrp_length 0</code></pre>
+
+## Evaluation with output files
+You can compute the metrics for the output summaries in Gigaword and DUC2004 datasets. Thus, you can evaulate your outputs with the provided evaulation code. The code assumes four output files in 8, 10, 13, 50% lengths (see the files in ***outputs/msrp/***).
+
+<pre> <code>python evaulate_outputs.py outputs/msrp 0</code></pre>
   
 ## Model training
 1. Download the training data from [a public link](https://drive.google.com/open?id=0B6N7tANPyVeBNmlSX19Ld2xDU1E).
@@ -82,7 +88,7 @@ We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFac
 ## To-do list
 - [x] Update how to train
 - [x] Upload outputs
-- [ ] Upload evaluation code based on output texts
+- [x] Upload evaluation code based on output texts
 
 ## Citation
 If you use this repository for your work, please consider citing [our paper](https://aclanthology.org/2022.findings-emnlp.214/):
