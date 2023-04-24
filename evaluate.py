@@ -85,10 +85,11 @@ def build_dataset(tokenizer, tl, dpath, testdata, batch_size=64):
             controlled_inputs.append(prefix + at)
             target_lens.append(cl)
 
-        sortidx = np.array(target_lens).argsort()
-        sorted_controlled_inputs = np.array(controlled_inputs)[sortidx]
-        controlled_inputs = sorted_controlled_inputs.tolist()
-        target_lens = np.array(target_lens)[sortidx].tolist()
+        # # Below codes are used for reducing computation for ratio-based summarization
+        # sortidx = np.array(target_lens).argsort()
+        # sorted_controlled_inputs = np.array(controlled_inputs)[sortidx]
+        # controlled_inputs = sorted_controlled_inputs.tolist()
+        # target_lens = np.array(target_lens)[sortidx].tolist()
 
     inputs = tokenizer(controlled_inputs, return_tensors='pt', padding=True, 
                    add_special_tokens=True).input_ids.cuda()
@@ -102,12 +103,12 @@ def build_dataset(tokenizer, tl, dpath, testdata, batch_size=64):
 
             refers.append(each_ref)      
 
-    if tl < 1:        
-        sorted_refers = np.array(refers[0])[sortidx]
-        refers = [sorted_refers.tolist()]
+    # if tl < 1:        
+    #     sorted_refers = np.array(refers[0])[sortidx]
+    #     refers = [sorted_refers.tolist()]
 
-        sorted_arts = np.array(arts)[sortidx]
-        arts = sorted_arts.tolist()
+    #     sorted_arts = np.array(arts)[sortidx]
+    #     arts = sorted_arts.tolist()
 
     return [batched_inputs, arts, refers, target_lens]
 
@@ -253,7 +254,7 @@ for tl in tls:
     print('R1\tR2\tRL\tFD\tFL\tAL')
     print('{}\t{}\t{}\t{:.3}\t{:.3}\t{:.3}\n'.format(*(scores+[cp_score, fl_score, lenavg])))  
 
-
-    ofn = '{}_{}_Len{}.txt'.format(fn.split('/')[-1], dtype, tl)
-    with open(ofn, 'w') as wf:
-        for s in summaries: wf.write(s+'\n')
+    # # Save the output summaries
+    # ofn = '{}_{}_Len{}.txt'.format(fn.split('/')[-1], dtype, tl)
+    # with open(ofn, 'w') as wf:
+    #     for s in summaries: wf.write(s+'\n')
