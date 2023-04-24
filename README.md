@@ -30,11 +30,11 @@ We devise an **abstractive** model by formulating the summarization task as a re
 
 <p align="center"><img src="images/model.png" alt="graph" width="99%"></p>
 
-### Summary Accuracy
+### Summarization Accuracy
 
 The proposed model (**MSRP**) substantially outperforms both abstractive and extractive models, yet frequently generating new words not contained in input texts.
 
-<p align="center"><img src="images/accuracy.png" alt="graph" width="65%"></p>
+<p align="center"><img src="images/accuracy.png" alt="graph" width="75%"></p>
 
 ## Major Requirements
 
@@ -81,7 +81,7 @@ We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFac
 
 ## To-do list
 - [x] Update how to train
-- [ ] Upload outputs
+- [x] Upload outputs
 - [ ] Upload evaluation code based on output texts
 
 ## Citation
