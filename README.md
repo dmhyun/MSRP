@@ -70,7 +70,7 @@ You can compute the metrics for the output summaries in Gigaword and DUC2004 dat
 	- This process is required as default code does not allow gradient flow through ***generate*** function used to generate summaries.
 	- Highly recommended to make a virtual environment (e.g., Anaconda environment)
     - The file (***grad_mode.py***) can be found in the library path
-    - <pre> <code>~/local/anaconda3/envs/ENV_NAME/lib/python3.6/site-packages/torch/autograd/grad_mode.py</code></pre>
+           <pre> <code>~/local/anaconda3/envs/ENV_NAME/lib/python3.6/site-packages/torch/autograd/grad_mode.py</code></pre>
 	- Modify the code under ***decorate_context*** fnuction by referring ***grad_model_modification.png*** image.
     <p align="center"><img src="grad_model_modification.png" alt="graph" width="45%"></p>
     
