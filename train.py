@@ -50,7 +50,7 @@ translogging.set_verbosity_warning()
 from SemanticSimilarity import SemanticSimilarity
 from LanguageModel import LanguageModel
 
-class Tester():
+class Tester(): # Evaluation code
     
     def _build_dataset(self, tl, dpath, args):
         arts = [i.strip() for i in open(dpath + '/input.txt'.format())]  
@@ -60,7 +60,8 @@ class Tester():
         else:
             arts = arts[:args.numvlddata]
 
-        if tl >= 1: # integer target lengths
+        # Prepend length prompts
+        if tl >= 1: # integer target lengths such as 8, 10, 13
             prefix = '{}: '.format(tl)
 
             controlled_inputs = [prefix+i for i in arts]
@@ -75,6 +76,7 @@ class Tester():
                 controlled_inputs.append(prefix + at)
                 target_lens.append(cl)  
 
+            # To enhance the generation efficiency
             sortidx = np.array(target_lens).argsort()
             sorted_controlled_inputs = np.array(controlled_inputs)[sortidx]
             controlled_inputs = sorted_controlled_inputs.tolist()
@@ -84,7 +86,7 @@ class Tester():
                        add_special_tokens=True).input_ids.cuda()
         batched_inputs = torch.split(inputs, 64)        
 
-        # Load references            
+        # Load human-written references            
         refers = []
         for fn in os.listdir(dpath):
             if 'ref' in fn:                 
@@ -95,7 +97,7 @@ class Tester():
 
                 refers.append(each_ref)    
 
-        if tl < 1:        
+        if tl < 1: # For ratio case, find corresponding references and input articles       
             sorted_refers = np.array(refers[0])[sortidx] # Gigaword contains a single reference set
             refers = [sorted_refers.tolist()]
 
@@ -114,9 +116,9 @@ class Tester():
         self.scl = args.scl
 
         if args.islength == True:
-            target_len = [8, 10, 13] # Evaluation case
+            target_len = [8, 10, 13] # Fixed lengths
         else: # ratio case
-            target_len = [0.5] # Evaluation case
+            target_len = [0.5] # Ratio-based length
 
         for tl in target_len:
             vdataset = self._build_dataset(tl, dpath, args)               
@@ -125,10 +127,9 @@ class Tester():
         self.evaluator = Evaluator(ss_model, lm_model, args.scf)
         self.repeat_penalty = args.repeat_penalty
         self.no_repeat_ngram = args.no_repeat_ngram
-        self.maxlens = [args.max_len_s, args.max_len_m, args.max_len_l]
+        # self.maxlens = [args.max_len_s, args.max_len_m, args.max_len_l]
         
-        
-    def get_score(self, model, aid): # aid: id to select a proper dataset
+    def get_score(self, model, aid): # aid: ID to select a proper dataset
         def length_reward(decoded_sents, target_len):       
             decosent_length = np.array([cal_len(d) for d in decoded_sents])
             
@@ -178,7 +179,8 @@ class Tester():
                 
                     str_bo = np.array(str_bo).reshape(-1, 3) # num_beams=3
                     
-                    # closer is better
+                    # Summaries that are closer to a target length is better
+                    # Also, filter out summaries that contain inappropriate patterns
                     output = []
                     for sidx, sb in enumerate(str_bo):                        
                         best_s = None
@@ -217,6 +219,7 @@ class Tester():
                 trunc_preds = preds # no truncation
                 rouge_type = 'f1'
 
+            # Get ROUGE scores
             scores = self.evaluator.get_score(trunc_preds, arts, refers, rouge_type)               
 
             olens = np.array([len(i.split()) for i in preds]) 
@@ -257,7 +260,6 @@ class TextDataset(Dataset):
                 self.examples = pickle.load(handle)
         else:
             print("⚙️  Creating features from Gigaword data from HuggingFace Dataset")
-            # print("⚙️  Creating features from dataset file at %s\n" % directory)
 
             trndata = load_dataset('gigaword')['train']['document']
             texts, lengths = [], []                
@@ -317,22 +319,23 @@ def reward_function(generations, inputs, reward_getter, tokenizer, target_length
 
     all_emb = reward_getter[0]._get_sent_emb(generations)
 
-    if isoverlap == True:
+    # if isoverlap == True: # Ablation study for semantic similarlity
     
-        word_overlap_ratio = [] # For ablation study
-        for i, g in enumerate(generations):
-            gset = set(g.split())
-            iset = set(inputs[i].split()) 
-            overlap = gset.intersection(iset)
+    #     word_overlap_ratio = [] # For ablation study
+    #     for i, g in enumerate(generations):
+    #         gset = set(g.split())
+    #         iset = set(inputs[i].split()) 
+    #         overlap = gset.intersection(iset)
 
-            oratio = len(overlap) / len(gset)
+    #         oratio = len(overlap) / len(gset)
 
-            word_overlap_ratio.append(oratio)
+    #         word_overlap_ratio.append(oratio)
             
-        reward_semantic = torch.FloatTensor(word_overlap_ratio).cuda()
-    else:
-        reward_semantic = reward_semantic.cuda()   
-            
+    #     reward_semantic = torch.FloatTensor(word_overlap_ratio).cuda()
+    # else:
+    #     reward_semantic = reward_semantic.cuda()   
+
+    reward_semantic = reward_semantic.cuda()   
     reward_fluency = reward_fluency.cuda()
     reward_length = length_reward(generations, target_length).cuda()    
     
@@ -346,34 +349,34 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
     ss_model = SemanticSimilarity(args.semsim_type)
     lm_model = LanguageModel()    
 
-    rg = (ss_model, lm_model)        
+    rg = (ss_model, lm_model) # Models to compute rewards       
     
-    tester = Tester(args, tokenizer, ss_model, lm_model, args.target_len)    
+    tester = Tester(args, tokenizer, ss_model, lm_model, args.target_len) # Evaluation function   
     
     """ Train the model """
     args.train_batch_size = args.batch_size_trn * max(1, args.n_gpu)   
     
-    def get_cons_weights(target_len, texts, model, tokenizer):
+    # def get_cons_weights(target_len, texts, model, tokenizer):
     
-        def _get_cons_weight(lenA, lenB, model, tokenizer):
-            tidA = tokenizer.convert_tokens_to_ids(str(lenA))
-            tidB = tokenizer.convert_tokens_to_ids(str(lenB))
+    #     def _get_cons_weight(lenA, lenB, model, tokenizer):
+    #         tidA = tokenizer.convert_tokens_to_ids(str(lenA))
+    #         tidB = tokenizer.convert_tokens_to_ids(str(lenB))
 
-            vA = model.shared.weight[tidA]
-            vB = model.shared.weight[tidB]
+    #         vA = model.shared.weight[tidA]
+    #         vB = model.shared.weight[tidB]
 
-            cos = (vA * vB).sum() / (vA.norm() * vB.norm())
+    #         cos = (vA * vB).sum() / (vA.norm() * vB.norm())
 
-            return 0.5 * (cos+1) # normalization into [0, 1]
+    #         return 0.5 * (cos+1) # normalization into [0, 1]
         
-        lensA = [target_len] * len(texts)
-        lensB = [cal_len(t) for t in texts]
+    #     lensA = [target_len] * len(texts)
+    #     lensB = [cal_len(t) for t in texts]
         
-        lenpairs = list(zip(lensA, lensB))
+    #     lenpairs = list(zip(lensA, lensB))
                         
-        weights = [_get_cons_weight(la, lb, model, tokenizer) for la, lb in lenpairs]
+    #     weights = [_get_cons_weight(la, lb, model, tokenizer) for la, lb in lenpairs]
         
-        return torch.FloatTensor(weights).cuda()
+    #     return torch.FloatTensor(weights).cuda()
         
     
     def collate4rl(examples: List[torch.Tensor], args):
@@ -394,10 +397,7 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
 
                     ids_prefix = tokenizer(prefix, add_special_tokens=False).input_ids
 
-                    if args.ptype == 'bart':                        
-                        input_text = [0] + ids_prefix + tid[1:] # prepend BOS token for BART
-                    else:
-                        input_text = ids_prefix + tid 
+                    input_text = ids_prefix + tid 
 
                     long_text_wlen.append(torch.LongTensor(input_text))
                     len_texts.append(cl)
@@ -456,9 +456,7 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
     
     hp = '_'.join([arg.replace('--', '').replace('=','').replace('_','') for arg in sys.argv[1:]]) 
     
-    if args.ptype == 'bart':
-        output_dir = args.output_dir + '/' + hp + '_bart' 
-    elif args.ptype == 'pegasus':
+    if args.ptype == 'pegasus':
         output_dir = args.output_dir + '/{}_lr{}_lbl{}_ms{}_mlb{}_ptrx'.format(args.ptype, args.learning_rate, args.lbl, args.lbl_maxstep, args.lbl_min) 
     else:
         output_dir = args.output_dir + '/' + hp + '/'
@@ -491,7 +489,7 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
 
     NUMSUBBATCH=1
     
-    maxlens = [args.max_len_s, args.max_len_m, args.max_len_l]
+    # maxlens = [args.max_len_s, args.max_len_m, args.max_len_l]
     
     allsteps = len(train_dataloader) * int(args.num_train_epochs) # total number of batches
     epoch_iterator = tqdm(train_dataloader, desc="Progress", total=allsteps)  
@@ -522,14 +520,16 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
             for i in range(args.num_agent): 
                 ag = model
 
-                long_text = alltext.to(args.device)
-                target_length = alllen # 8, ..., 8, 10, ..., 10, 13, ..., 13, 50%, ..., 50%
+                long_text = alltext.to(args.device) # Input long text to summarize
+                target_length = alllen # e.g., [8, ..., 8, 10, ..., 10, 13, ..., 13]
 
                 st = time.time()                
                 
+                # Maximum and minimum number of tokens
                 curmaxlen = int(target_length.max() * 3) # preparing 3 tokens per word (from data analysis)
                 curminlen = int(target_length.min() * 1.3)
 
+                # Generate baseline summaries (greedy_sents)
                 with torch.no_grad():
                     ag.eval() 
                     if args.lead == False:
@@ -542,6 +542,7 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
 
                 st = time.time()                    
 
+                # Generate target summaries (sample_sents)
                 outputs = ag.generate(input_ids=long_text, min_length=curminlen,
                                       max_length=curmaxlen,
                                       output_scores=True, do_sample=True, 
@@ -551,8 +552,7 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
 
                 sample_sents, token_logit = outputs[0], outputs[1]   
 
-
-                if args.ptype in ['bart', 'pegasus']:
+                if args.ptype in ['pegasus']:
                     token_logit = outputs[2]                                  
 
                 # Computing log loss
@@ -568,15 +568,15 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
                 log_probs = ((sample_prob+1e-24).log()*notpad_mask).sum(dim=1) / notpad_mask.sum(-1)
 
                 
-                # Computing rewards
+                # Transform token ID numbers into words
                 tk_sample_sents = tokenizer.batch_decode(sample_sents, skip_special_tokens=True, 
                                                          clean_up_tokenization_spaces=False)
                 
-                long_text = long_text[:,2:] # Removing length info. from input
+                long_text = long_text[:,2:] # Removing length info. from the input text
                 tk_inputs = tokenizer.batch_decode(long_text, skip_special_tokens=True, 
                                                    clean_up_tokenization_spaces=False)
 
-                if args.lead ==  True:
+                if args.lead ==  True: # Use lead bias as baseline in reinforcement learning
                     tk_greedy_sents = [' '.join(tk_inputs[i].split()[:target_length[i]]) for i in range(len(target_length))]                    
                 else:
                     # Select greedy sampling based on the lead bias approach to save computation
@@ -584,7 +584,7 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
                                                          clean_up_tokenization_spaces=False)
 
 
-                # Error handling
+                # Error handling (empty sentence generation)
                 for gtid in range(len(tk_sample_sents)):
                     sent = tk_sample_sents[gtid]
                     if cal_len(sent) < 3: sent = 'xxx dummy xxx'
@@ -596,6 +596,7 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
 
                 st = time.time()                
 
+                # Compute rewards
                 with torch.no_grad():                    
                     lbl_weight = min((global_step+1)/args.lbl_maxstep+args.lbl_min, 1)
                     curlbl = args.lbl * lbl_weight
@@ -634,7 +635,7 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
                 batch_reward.append(all_each_reward[0].tolist())
                 
 
-#             🔥 Multi-Summary Learning 🔥            
+            # Multi-Summary Learning            
             final_loss = None
             sample_consistencies_4eachlen = []
             baseline_consistencies_4eachlen = []
@@ -674,9 +675,12 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
             sample_consistencies_4eachlen = torch.cat(sample_consistencies_4eachlen)
             baselin_consistencies_4eachlen = torch.cat(baseline_consistencies_4eachlen)            
             
+            # Original rewards + the reward from multi-summary learning mechanism
             sample_reward = all_sample_rewards[0] + args.lb * sample_consistencies_4eachlen
             baseline_reward = all_baseline_rewards[0] + args.lb * baselin_consistencies_4eachlen
 
+
+            # Compute a loss
             rl_loss = -(sample_reward - baseline_reward) * all_logprobs[0]   
 
             losses = rl_loss.reshape(-1, args.batch_size_trn)
@@ -720,13 +724,14 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
                 
                 global_step += 1
 
+                # Evaluation on validation data
                 if args.logging_steps > 0 and global_step % args.save_steps == 0:                    
                     if args.evaluate_during_training:  
                                                 
                         with torch.no_grad():                       
                             all_tar_scores = []
                             all_reward_product = []
-                            NUM_EVAL_CASE= 3 if args.islength else 1
+                            NUM_EVAL_CASE= 3 if args.islength else 1 # 3: [8, 10, 13] lengths, 1: [50%] length
                             for eid in range(NUM_EVAL_CASE):  
                                 scores, reward_product = tester.get_score(model, eid)             
                                 all_tar_scores.append(scores)
@@ -734,7 +739,7 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
     
                         all_reward_product = np.stack(all_reward_product).mean()                    
 
-                        tar_rouge1, tar_rouge2, tar_rougeL, lenerr, rflu, rsem, _ = np.array(all_tar_scores).mean(0)
+                        tar_rouge1, tar_rouge2, tar_rougeL, lenerr, rflu, rsem, _ = np.array(all_tar_scores).mean(0) # aggregate each reward
 
                         avglen = np.array(all_tar_scores)[:,-1]
                                                     
@@ -768,18 +773,20 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
                             if global_step > args.warmup_steps:
                                 early_stop_count += 1    
 
-                        eval_log['Eval/Rouge-1'] = best_eval_perf1                                                    
-                        eval_log['Eval/Rouge-2'] = best_eval_perf2
-                        eval_log['Eval/Rouge-L'] = best_eval_perfL
-                        eval_log['Eval/LenErr'] = best_eval_lenerr
-                        eval_log['Eval/Criterion_nottrunc'] = best_eval_perf  
-                        eval_log['Eval/all_reward_product'] = best_ARP
 
-                        if args.islength == True:
-                            for tlidx, tl4log in enumerate([8,10,13]):
-                                eval_log['Eval/Avg len {}'.format(tl4log)] = best_avg_len[tlidx]
-                        else:
-                            eval_log['Eval/Avg len {}'.format('50%')] = best_avg_len[0]
+                        # # Weight and bias logging
+                        # eval_log['Eval/Rouge-1'] = best_eval_perf1                                                    
+                        # eval_log['Eval/Rouge-2'] = best_eval_perf2
+                        # eval_log['Eval/Rouge-L'] = best_eval_perfL
+                        # eval_log['Eval/LenErr'] = best_eval_lenerr
+                        # eval_log['Eval/Criterion_nottrunc'] = best_eval_perf  
+                        # eval_log['Eval/all_reward_product'] = best_ARP
+
+                        # if args.islength == True:
+                        #     for tlidx, tl4log in enumerate([8,10,13]):
+                        #         eval_log['Eval/Avg len {}'.format(tl4log)] = best_avg_len[tlidx]
+                        # else:
+                        #     eval_log['Eval/Avg len {}'.format('50%')] = best_avg_len[0]
 
                         # wandb.log(eval_log)
                             
@@ -859,10 +866,10 @@ def main():
     parser.add_argument("--target_len", default='8,10,13', help="Target lengths")
     parser.add_argument("--num_msl", default=3, type=int, help="# branches of multi-summary learning")
     
-    # Different max length for each target length, reducing training time (no impact on the quality)
-    parser.add_argument("--max_len_s", default=20, type=int, help="Max length for short generation")
-    parser.add_argument("--max_len_m", default=25, type=int, help="Max length for medium generation")
-    parser.add_argument("--max_len_l", default=30, type=int, help="Max length for long generation")
+    # # Different max length for each target length, reducing training time (no impact on the quality)
+    # parser.add_argument("--max_len_s", default=20, type=int, help="Max length for short generation")
+    # parser.add_argument("--max_len_m", default=25, type=int, help="Max length for medium generation")
+    # parser.add_argument("--max_len_l", default=30, type=int, help="Max length for long generation")
     
     parser.add_argument("--numdata", default=500000, type=int, help="# of training data to use")
     parser.add_argument("--numvlddata", default=500, type=int, help="# of validation data")
@@ -907,9 +914,6 @@ def main():
     # wandb.init(project='MSRP', 
     #            config=args,
     #            mode=args.wandb)  
-
-    
-    
 
     torch.cuda.set_device(args.gpu) 
 
@@ -956,30 +960,17 @@ def main():
     
     set_seed(args)
 
-    if args.ptype == 'bart':
-        tokenizer = AutoTokenizer.from_pretrained("facebook/bart-base")    
-        print("💫 Loading a pretrained model from {}\n".format(init_path))     
-
-        bart_best_pretrained_model = 'pretrained_models/bart/bart-base-pretrained_lr1e-08_ep10_wd0.001/checkpoint-20500'
-        agent = AutoModelForSeq2SeqLM.from_pretrained(bart_best_pretrained_model).to(args.device)   
-
-    elif args.ptype == 'pegasus':
+    # Loading a pretrained language model to fine-tune
+    if args.ptype == 'pegasus': # PEGASUS not trained on supervised data
         tokenizer = AutoTokenizer.from_pretrained("google/pegasus-large")    
         print("💫 Loading a pretrained model from {}\n".format(init_path))          
 
         agent = AutoModelForSeq2SeqLM.from_pretrained('google/pegasus-large').to(args.device)   
         agent = PegasusForConditionalGeneration.from_pretrained('google/pegasus-large').to(args.device)   
-    elif args.ptype == 't5-v1':
-        tokenizer = AutoTokenizer.from_pretrained("google/t5-v1_1-small")    
-        print("💫 Loading a pretrained model from {}\n".format(init_path))          
-        
-        t5v1_best_pertrained_model = 'pretrained_models/t5-v1/t5-v1_1-small-pretrained_lr1e-07_ep10_wd0.01/checkpoint-35500'   
-        agent = AutoModelForSeq2SeqLM.from_pretrained(t5v1_best_pertrained_model).to(args.device)   
-    else:
+    else: # T5 model
         tokenizer = AutoTokenizer.from_pretrained("t5-small")    
         
-        # Load a pretrained model
-        if 't5-pretrain' in init_path: # using pretrained model
+        if 't5-pretrain' in init_path: # using our pretrained model
             init_path = 'anonsubms/t5pretrain'
         else:
             init_path = 't5-small'
