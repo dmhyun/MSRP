@@ -62,7 +62,7 @@ You can compute the metrics for the output summaries in Gigaword and DUC2004 dat
 
 <pre> <code>python evaulate_outputs.py outputs/msrp 0</code></pre>
   
-## Model training
+## Model Training
 1. Download the training data from [a public link](https://drive.google.com/open?id=0B6N7tANPyVeBNmlSX19Ld2xDU1E).
 	- Move ***train.article.txt*** file to ***data/train/***
     
