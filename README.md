@@ -57,7 +57,7 @@ We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFac
 [Example with 0-th GPU]
 <pre> <code>python evaulate.py anonsubms/msrp_length 0</code></pre>
 
-## Evaluation with output files
+## Evaluation with Output Files
 You can compute the metrics for the output summaries in Gigaword and DUC2004 datasets. Thus, you can evaulate your outputs with the provided evaulation code. The code assumes four output files in 8, 10, 13, 50% lengths (see the files in ***outputs/msrp/***).
 
 <pre> <code>python evaulate_outputs.py outputs/msrp 0</code></pre>
