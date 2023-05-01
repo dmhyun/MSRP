@@ -41,7 +41,7 @@ The proposed model (**MSRP**) substantially outperforms both abstractive and ext
 ## Major Requirements
 
 * Python
-* Pytorch
+* Pytorch=1.10.2+cu113
 * pythonrouge
 * transformers
 * Numpy
@@ -57,29 +57,29 @@ We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFac
 [Example with 0-th GPU]
 <pre> <code>python evaulate.py anonsubms/msrp_length 0</code></pre>
 
-## Evaluation with output files
+## Evaluation with Output Files
 You can compute the metrics for the output summaries in Gigaword and DUC2004 datasets. Thus, you can evaulate your outputs with the provided evaulation code. The code assumes four output files in 8, 10, 13, 50% lengths (see the files in ***outputs/msrp/***).
 
 <pre> <code>python evaulate_outputs.py outputs/msrp 0</code></pre>
   
-## Model training
-1. Download the training data from [a public link](https://drive.google.com/open?id=0B6N7tANPyVeBNmlSX19Ld2xDU1E).
-	- Move ***train.article.txt*** file to ***data/train/***
+## Model Training
     
-2. Modify a file of PyTorch (i.e., ***grad_mode.py***) to flow the gradient while generating summaries.
+1. Modify a file of PyTorch (i.e., ***grad_mode.py***) to flow the gradient while generating summaries.
 	- This process is required as default code does not allow gradient flow through ***generate*** function used to generate summaries.
 	- Highly recommended to make a virtual environment (e.g., Anaconda environment)
     - The file (***grad_mode.py***) can be found in the library path
-           <pre> <code>~/local/anaconda3/envs/ENV_NAME/lib/python3.6/site-packages/torch/autograd/grad_mode.py</code></pre>
+           <pre> <code>~/ANACONDA_PATH/envs/ENV_NAME/lib/python3.6/site-packages/torch/autograd/grad_mode.py</code></pre>
 	- Modify the code under ***decorate_context*** fnuction by referring ***grad_model_modification.png*** image.
     <p align="center"><img src="grad_model_modification.png" alt="graph" width="45%"></p>
     
-3. Train MSRP by using the following command line.
+2. Train MSRP by using the following command line.
 	- <pre> <code>python train.py</code></pre>
 	- The model will be automatically saved.
 	- It will take at least 5 hours on GeForce RTX 3090.
+	- If you want to log the training procedure, you can use [Weight & Bias](https://wandb.ai/) ([How to initialize it](https://docs.wandb.ai/quickstart)) by setting an argument.
+	- <pre> <code>python train.py --wandb online</code></pre>
     
-4. Evaluate the trained model using ***evaluate.py***.
+3. Evaluate the trained model using ***evaluate.py***.
 	- Change the model path from the model ID to the path of the trained model, ***trained_msrp/lb0.01_ap0.3***.
     - <pre> <code>python evaulate.py trained_msrp/lb0.01_ap0.3</code></pre>
     
