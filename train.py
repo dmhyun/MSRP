@@ -247,32 +247,22 @@ def cal_len(text):
     return len(text.split()) 
 
 class TextDataset(Dataset):
-    def __init__(self, tokenizer, args, file_path: str):
+    def __init__(self, tokenizer, args):
         
-        assert os.path.isfile(file_path)
+        print("⚙️  Creating features from Gigaword data from HuggingFace Dataset")
 
-        directory, filename = os.path.split(file_path)
-        cached_features_file = os.path.join(directory, args.model + "_cached_sm_" + filename)
-
-        if os.path.exists(cached_features_file) and not args.overwrite_cache: 
-            print("Loading features from cached file %s" % cached_features_file)
-            with open(cached_features_file, "rb") as handle:
-                self.examples = pickle.load(handle)
-        else:
-            print("⚙️  Creating features from Gigaword data from HuggingFace Dataset")
-
-            trndata = load_dataset('gigaword')['train']['document']
-            texts, lengths = [], []                
-            for l in trndata:
-                t = l.strip()
-                texts.append(t)
-                lengths.append(cal_len(t))
-                if len(texts) == args.numdata:
-                    break
-                        
-            tids = tokenizer(texts, add_special_tokens=True).input_ids   
-            
-            self.examples = list(zip(tids, lengths))                
+        trndata = load_dataset('gigaword')['train']['document']
+        texts, lengths = [], []                
+        for l in trndata:
+            t = l.strip()
+            texts.append(t)
+            lengths.append(cal_len(t))
+            if len(texts) == args.numdata:
+                break
+                    
+        tids = tokenizer(texts, add_special_tokens=True).input_ids   
+        
+        self.examples = list(zip(tids, lengths))                
 
     def __len__(self):
         return len(self.examples)
@@ -281,7 +271,7 @@ class TextDataset(Dataset):
         return self.examples[item] 
 
 def load_and_cache_examples(args, tokenizer):
-    dataset = TextDataset(tokenizer, args, file_path=args.train_file)    
+    dataset = TextDataset(tokenizer, args)    
     residual = len(dataset) % args.batch_size_trn
     if residual != 0:
         dataset.examples = dataset.examples[:-residual]
