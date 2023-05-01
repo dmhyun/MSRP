@@ -25,7 +25,7 @@ from itertools import chain
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-from rouge import Rouge
+# from rouge import Rouge
 
 from datasets import load_dataset
 
@@ -688,16 +688,16 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
             if global_step % args.logging_steps == 0 and step != 0:                     
                 brewards = np.array(batch_reward).mean(0)                
 
-            #    # You can print below values to console if you want
-            #     wandb.log({
-            #         'train/epoch': global_step/len(train_dataloader),
-            #         "train/reward/length": brewards[0],
-            #         "train/reward/fluency": brewards[1],
-            #         "train/reward/semantic": brewards[2],
-            #         "train/reward/msl": sample_consistencies_4eachlen.mean().item(),
-            #         "train/loss": inc_batch_loss,
-            #         "train/scl": args.scl
-            #     })                        
+               # You can print below values to console if you want
+                wandb.log({
+                    'train/epoch': global_step/len(train_dataloader),
+                    "train/reward/length": brewards[0],
+                    "train/reward/fluency": brewards[1],
+                    "train/reward/semantic": brewards[2],
+                    "train/reward/msl": sample_consistencies_4eachlen.mean().item(),
+                    "train/loss": inc_batch_loss,
+                    "train/scl": args.scl
+                })                        
 
             st = time.time()
             agentloss = 0
@@ -773,22 +773,21 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
                             if global_step > args.warmup_steps:
                                 early_stop_count += 1    
 
+                        # Weight and bias logging
+                        eval_log['Eval/Rouge-1'] = best_eval_perf1                                                    
+                        eval_log['Eval/Rouge-2'] = best_eval_perf2
+                        eval_log['Eval/Rouge-L'] = best_eval_perfL
+                        eval_log['Eval/LenErr'] = best_eval_lenerr
+                        eval_log['Eval/Criterion_nottrunc'] = best_eval_perf  
+                        eval_log['Eval/all_reward_product'] = best_ARP
 
-                        # # Weight and bias logging
-                        # eval_log['Eval/Rouge-1'] = best_eval_perf1                                                    
-                        # eval_log['Eval/Rouge-2'] = best_eval_perf2
-                        # eval_log['Eval/Rouge-L'] = best_eval_perfL
-                        # eval_log['Eval/LenErr'] = best_eval_lenerr
-                        # eval_log['Eval/Criterion_nottrunc'] = best_eval_perf  
-                        # eval_log['Eval/all_reward_product'] = best_ARP
+                        if args.islength == True:
+                            for tlidx, tl4log in enumerate([8,10,13]):
+                                eval_log['Eval/Avg len {}'.format(tl4log)] = best_avg_len[tlidx]
+                        else:
+                            eval_log['Eval/Avg len {}'.format('50%')] = best_avg_len[0]
 
-                        # if args.islength == True:
-                        #     for tlidx, tl4log in enumerate([8,10,13]):
-                        #         eval_log['Eval/Avg len {}'.format(tl4log)] = best_avg_len[tlidx]
-                        # else:
-                        #     eval_log['Eval/Avg len {}'.format('50%')] = best_avg_len[0]
-
-                        # wandb.log(eval_log)
+                        wandb.log(eval_log)
                             
                         if early_stop_count > args.patient:
                             print('\n❗️ Performance exceeds the patience count ({}).'
@@ -907,13 +906,13 @@ def main():
     parser.add_argument("--overwrite_cache", default=True, action="store_true", help="Overwrite cached training and evaluation sets") 
     parser.add_argument("--seed", type=int, default=2022, help="random seed for initialization")    
 
-    # parser.add_argument('--wandb', default='online', type=str) 
+    parser.add_argument('--wandb', default='disabled', type=str) # disabled or online
     
     args = parser.parse_args()
 
-    # wandb.init(project='MSRP', 
-    #            config=args,
-    #            mode=args.wandb)  
+    wandb.init(project='MSRP', 
+               config=args,
+               mode=args.wandb)  
 
     torch.cuda.set_device(args.gpu) 
 
