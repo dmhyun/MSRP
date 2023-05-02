@@ -40,7 +40,7 @@ The proposed model (**MSRP**) substantially outperforms both abstractive and ext
 
 ## Major Requirements
 
-* Python
+* Python=3.8
 * Pytorch=1.1
 * pythonrouge
 * transformers=4.1
