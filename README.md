@@ -76,7 +76,7 @@ You can compute the metrics for the output summaries in Gigaword and DUC2004 dat
 	- <pre> <code>python train.py</code></pre>
 	- The model will be automatically saved.
 	- It will take at least 5 hours on GeForce RTX 3090.
-	- If you want to log the training procedure, you can use [Weight & Bias](https://wandb.ai/) ([How to initialize it](https://docs.wandb.ai/quickstart)) by setting an argument.
+	- For loging training procedure, you can use [Weight & Bias](https://wandb.ai/) ([How to initialize it](https://docs.wandb.ai/quickstart)) by setting an argument.
 	- <pre> <code>python train.py --wandb online</code></pre>
     
 3. Evaluate the trained model using ***evaluate.py***.
