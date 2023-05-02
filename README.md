@@ -41,10 +41,10 @@ The proposed model (**MSRP**) substantially outperforms both abstractive and ext
 ## Major Requirements
 
 * Python
-* Pytorch=1.10.2+cu113
+* Pytorch=1.1
 * pythonrouge
-* transformers
-* Numpy
+* transformers=4.1
+* numpy
 
 ## Evaluation with Trained Models
 We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFace library so that you can easily evaluate the uploaded models. It will automatically download the trained model and evaluate it on the data.

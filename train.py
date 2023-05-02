@@ -867,7 +867,7 @@ def main():
 
     parser.add_argument("--semsim_type", default='sent2vec', help="sent2vec or sbert") 
     
-    parser.add_argument( "--output_dir", default='rebuttal_emnlp_trained', type=str, required=False)    
+    parser.add_argument( "--output_dir", default='trained', type=str, required=False)    
     
     parser.add_argument("--init_checkpoint",default=None,type=int,help="Model checkpoint for weights initialization.",)    
     parser.add_argument("--batch_size_trn", default=24, type=int, help="Batch size for trn")
