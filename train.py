@@ -975,8 +975,7 @@ def main():
     if args.do_train:
         train_dataset = load_and_cache_examples(args, tokenizer)                
         
-        with torch.autograd.set_detect_anomaly(True):
-            global_step, tr_loss = train(args, train_dataset, agent, tokenizer)
+        global_step, tr_loss = train(args, train_dataset, agent, tokenizer)
         print(" global_step = %s, average loss = %s" % (global_step, tr_loss))
 
 
