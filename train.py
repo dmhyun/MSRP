@@ -739,7 +739,8 @@ def train(args, train_dataset, model, tokenizer) -> Tuple[int, float]:
 
                         eval_log = {}
 
-                        eval_criterion = all_reward_product
+                        eval_criterion = tar_rouge1
+#                         eval_criterion = all_reward_product
                         
                         if eval_criterion > best_eval_perf:                
                             best_eval_perf = eval_criterion
