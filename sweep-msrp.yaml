@@ -1,0 +1,33 @@
+program: train.py
+method: random
+name: MSRP_length_sbert
+
+metric:
+  goal: maximize
+  name: Eval/Criterion_nottrunc
+parameters:
+  lb:
+    values: [0.001, 0.01, 0.03, 0.05, 0.1, 0.2]
+
+  alpha:
+    values: [0.1, 0.2, 0.3, 0.4]
+
+  scl:
+    values: [5, 10, 15, 20]
+
+  #  batch_size_trn:
+  #    values: [16, 24]
+
+  # learning_rate: # 5e-5 is the best
+  #   values: [4e-5, 5e-5, 6e-5]
+
+  # numdata:
+  #   values: [300000, 500000, 1000000]
+
+  target_len:
+    values: ['8,10,13']
+    # values: ['0.3,0.4,0.5', '0.4,0.5,0.6']
+
+  semsim_type:
+    values: ['sbert'] # 
+  #   # values: ['sent2vec'] # 
