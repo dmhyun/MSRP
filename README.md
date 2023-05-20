@@ -45,6 +45,7 @@ The proposed model (**MSRP**) substantially outperforms both abstractive and ext
 * pythonrouge
 * transformers=4.1
 * numpy
+* wandb (for logging)
 
 ## Evaluation with Trained Models
 We uploaded the [trained models](https://huggingface.co/anonsubms) in HuggingFace library so that you can easily evaluate the uploaded models. It will automatically download the trained model and evaluate it on the data.
@@ -87,10 +88,18 @@ You can compute the metrics for the output summaries in Gigaword and DUC2004 dat
 	- <pre> <code>python pretrain_t5.py</code></pre>
 	- If you want to use your pretrained model, then change ***init_path*** argument in ***train.py*** to the saved directory ***t5-pretrained/***, and run the MSRP.
 
+## Hyperparameter tuning
+You can tune the hyperparameters of MSRP by using the uploaded sweep file of Weigth & Bias library. Please refer to [the official document](https://docs.wandb.ai/guides/sweeps) for more information.  
+    <pre> <code>wandb sweep sweep-msrp.yaml</code></pre>
+    <pre> <code>wandb agent SWEEP_ID</code></pre>
+
+
+
 ## To-do list
 - [x] Update how to train
 - [x] Upload outputs
 - [x] Upload evaluation code based on output texts
+- [x] Update how to tune hyperparameters
 
 ## Citation
 If you use this repository for your work, please consider citing [our paper](https://aclanthology.org/2022.findings-emnlp.214/):
